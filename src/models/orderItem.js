@@ -1,38 +1,35 @@
 import Sequelize, { Model } from 'sequelize';
 
-class Product extends Model {
+class OrderItem extends Model {
   static init(sequelize) {
     super.init(
       {
-        name: {
-          type: Sequelize.STRING,
+        order_id: {
+          type: Sequelize.INTEGER,
+          allowNull: false
+        },
+        product_id: {
+          type: Sequelize.INTEGER,
+          allowNull: false
+        },
+        quantity: {
+          type: Sequelize.INTEGER,
           allowNull: false
         },
         price: {
           type: Sequelize.DECIMAL(10, 2),
           allowNull: false
-        },
-        stock: {
-          type: Sequelize.INTEGER,
-          allowNull: false
         }
       },
       {
         sequelize,
-        tableName: 'products',
+        tableName: 'order_items',
         underscored: true
       }
     );
 
     return this;
   }
-
-  static associate(models) {
-    this.hasMany(models.OrderItem, {
-      foreignKey: 'product_id',
-      as: 'orderItems'
-    });
-  }
 }
 
-export default Product;
+export default OrderItem;
