@@ -1,145 +1,36 @@
-# Agente Moda
-# 🚀 Agente Moda
+# 🎭 Playwright API Automation - Backend Testing with Docker
 
-Sistema de Gestão Comercial desenvolvido para controle de produtos, clientes, pedidos e faturamento.
+Este repositório contém uma suíte de testes automatizados de API desenvolvida com **Playwright** e **TypeScript**. O principal objetivo do projeto é garantir a integridade, segurança e resiliência dos endpoints de autenticação de uma aplicação conteinerizada.
 
-## 📋 Sobre o Projeto
-
-O Agente Moda é uma aplicação Full Stack desenvolvida para auxiliar lojas no gerenciamento de vendas, estoque e clientes.
-
-O sistema permite:
-
-* Autenticação de usuários com JWT
-* Gestão de produtos
-* Gestão de clientes
-* Gestão de pedidos
-* Controle de estoque
-* Dashboard com indicadores de negócio
-* Controle de faturamento
+O projeto simula cenários reais de testes de integração, validando as respostas do servidor e contratos de dados diretamente contra uma API rodando em ambiente isolado via **Docker**.
 
 ---
 
-## 🛠 Tecnologias Utilizadas
+## 🛠️ Tecnologias e Ferramentas Utilizadas
 
-### Frontend
-
-* React
-* Vite
-* Axios
-* React Router DOM
-
-### Backend
-
-* Node.js
-* Express
-* Sequelize ORM
-* JWT (JSON Web Token)
-
-### Banco de Dados
-
-* MySQL
+* **Mecanismo de Teste:** [Playwright](https://playwright.dev/) (API Request Context)
+* **Linguagem:** TypeScript
+* **Ambiente de Desenvolvimento:** Node.js
+* **Ambiente de Execução da API:** Docker & Docker Compose
+* **Validação Manual Primária:** Insomnia
 
 ---
 
-## ⚙️ Funcionalidades
+## ⚙️ Arquitetura do Ambiente & Resolução de Desafios
 
-### 🔐 Autenticação
-
-* Login de usuário
-* Proteção de rotas com JWT
-
-### 📦 Produtos
-
-* Listar produtos
-* Cadastrar produtos
-* Excluir produtos
-
-### 👥 Clientes
-
-* Listar clientes
-* Cadastrar clientes
-* Excluir clientes
-
-### 🛒 Pedidos
-
-* Listar pedidos
-* Finalizar pedidos
-* Atualização automática de estoque
-
-### 📊 Dashboard
-
-* Total de produtos
-* Total de clientes
-* Total de pedidos
-* Pedidos concluídos
-* Faturamento total
+Durante o desenvolvimento da suíte de testes, foram implementadas soluções de infraestrutura e redes locais para garantir a comunicação fluida entre a máquina hospedeira e os containers:
+* **Mapeamento de Portas:** Vinculação e exposição correta da porta da API (`3001`).
+* **Protocolo de Rede:** Ajuste de resolução de DNS para forçar o tráfego via IPv4 (`127.0.0.1`), contornando restrições de loopback IPv6 (`::1`) nativas do Node.js moderno ao se comunicar com o Docker.
+* **Asserções Robustas:** Validação rigorosa de respostas JSON (*case-sensitive*) e Status Codes HTTP.
 
 ---
 
-## 📁 Estrutura do Projeto
+## 🚀 Como Executar o Projeto
 
-Backend:
+### Prerrequisitos
+Antes de começar, você vai precisar do [Node.js](https://nodejs.org/), [Git](https://git-scm.com/) e do [Docker](https://www.docker.com/) instalados em sua máquina.
 
+### 1. Clonar o Repositório
 ```bash
-projeto-teste/
-├── src/
-├── package.json
-├── README.md
-└── .env
-```
-
-Frontend:
-
-```bash
-agente-moda-web/
-├── src/
-├── package.json
-└── vite.config.js
-```
-
----
-
-## 🚀 Como Executar
-
-### Backend
-
-```bash
-npm install
-npm run dev
-```
-
-Servidor:
-
-```bash
-http://localhost:3001
-```
-
-### Frontend
-
-```bash
-cd agente-moda-web
-npm install
-npm run dev
-```
-
-Aplicação:
-
-```bash
-http://localhost:5173
-```
-
----
-
-## 🎯 Objetivo
-
-Este projeto foi desenvolvido para fins de aprendizado e demonstração de competências em desenvolvimento Full Stack utilizando React, Node.js, Express, Sequelize e MySQL.
-
----
-
-## 👨‍💻 Autor
-
-Isaac Silva
-
-Desenvolvedor Full Stack Júnior
-
-[https://github.com/ISAIASUNIC/](https://github.com/ISAIASUNIC/Agente) Moda
+git clone [https://.github/workflows/playwright.yml](https://github.com/ISAIASUNIC/playwright-api-automation.git)
+cd NOME_DO_REPOSITORIO
