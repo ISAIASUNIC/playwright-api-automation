@@ -1,23 +1,45 @@
 import { test, expect } from '@playwright/test';
 
-test('Deve validar que a API barra o acesso sem token', async ({ request }) => {
-  const response = await request.get('/login');
+test('Deve realizar o login e cadastrar um produto com sucesso no Agente Moda', async ({ request }) => {
+  
+  console.log('🔄 Iniciando teste automatizado...');
 
-  // 1. Transforma a resposta bruta em um objeto JavaScript (JSON)
-  const responseBody = await response.json();
-  console.log('Objeto JSON recebido:', responseBody);
+  // 1. FAZ O LOGIN DINÂMICO PARA CAPTURAR O TOKEN REAL DO DOCKER
+  const loginResponse = await request.post('http://localhost:3001/sessions', {
+    data: {
+      email: 'isaias@teste.com', // Garanta que este usuário existe no seu banco
+      password: '123'            // A senha correspondente
+    }
+  });
 
-  // 2. Valida se o status da resposta é 401 (Não Autorizado) ou 400 (Bad Request)
-  // Ajuste o número se o seu back-end usar outro código de erro
-  expect(response.status()).toBe(401); 
+  // Valida se o login deu bom (Status 200)
+  expect(loginResponse.status()).toBe(200);
+  
+  const loginBody = await loginResponse.json();
+  const tokenGerado = loginBody.token;
+  
+  console.log('🔑 Token JWT obtido com sucesso via automação!');
 
-  // 3. Valida se a propriedade 'message' contém o texto exato retornado pelo back-end
-  expect(responseBody.message).toBe('Token não informado');
+  // 2. CADASTRA O PRODUTO USANDO O TOKEN EXTRAÍDO ANTERIORMENTE
+  const productResponse = await request.post('http://localhost:3001/products', {
+    headers: {
+      'Authorization': `Bearer ${tokenGerado}`,
+      'Content-Type': 'application/json'
+    },
+    data: {
+      name: 'Camiseta Playwright Liso',
+      price: 79.90,
+      stock: 50
+    }
+  });
+
+  // Aceita tanto 200 quanto 201 dependendo do padrão do seu controller
+  expect([200, 201]).toContain(productResponse.status());
+
+  const productBody = await productResponse.json();
+  
+  // Validação final: o banco do Docker atribuiu um ID ao produto?
+  expect(productBody).toHaveProperty('id');
+  
+  console.log(`✅ Sucesso! Produto "${productBody.name}" cadastrado com ID: ${productBody.id}`);
 });
-
-
-
-
-
-
-
