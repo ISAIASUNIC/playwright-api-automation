@@ -1,36 +1,39 @@
-# 🎭 Playwright API Automation - Backend Testing with Docker
+# 🎭 Playwright API Automation - Backend Testing with Docker (Agente Moda API)
 
-Este repositório contém uma suíte de testes automatizados de API desenvolvida com **Playwright** e **TypeScript**. O principal objetivo do projeto é garantir a integridade, segurança e resiliência dos endpoints de autenticação de uma aplicação conteinerizada.
+Este repositório contém uma suíte de testes automatizados de API desenvolvida com **Playwright** focado em testes de integração de backend. O principal objetivo do projeto é garantir a integridade, segurança e resiliência dos endpoints de autenticação (JWT) e cadastro de produtos da aplicação **Agente Moda**.
 
-O projeto simula cenários reais de testes de integração, validando as respostas do servidor e contratos de dados diretamente contra uma API rodando em ambiente isolado via **Docker**.
+O projeto simula cenários reais de testes de integração ponta a ponta, validando as respostas do servidor, fluxos de autenticação protegidos por middlewares e persistência de dados diretamente contra uma API rodando conectada a um banco de dados relacional em ambiente isolado via **Docker**.
 
 ---
 
 ## 🛠️ Tecnologias e Ferramentas Utilizadas
 
 * **Mecanismo de Teste:** [Playwright](https://playwright.dev/) (API Request Context)
-* **Linguagem:** TypeScript
-* **Ambiente de Desenvolvimento:** Node.js
-* **Ambiente de Execução da API:** Docker & Docker Compose
+* **Backend Framework:** Node.js & Express
+* **ORM / Banco de Dados:** Sequelize ORM & PostgreSQL
+* **Autenticação:** JWT (JSON Web Tokens) com estratégia Bearer Token
+* **Ambiente de Execução da API:** Docker (Container PostgreSQL)
 * **Validação Manual Primária:** Insomnia
 
 ---
 
 ## ⚙️ Arquitetura do Ambiente & Resolução de Desafios
 
-Durante o desenvolvimento da suíte de testes, foram implementadas soluções de infraestrutura e redes locais para garantir a comunicação fluida entre a máquina hospedeira e os containers:
-* **Mapeamento de Portas:** Vinculação e exposição correta da porta da API (`3001`).
-* **Protocolo de Rede:** Ajuste de resolução de DNS para forçar o tráfego via IPv4 (`127.0.0.1`), contornando restrições de loopback IPv6 (`::1`) nativas do Node.js moderno ao se comunicar com o Docker.
-* **Asserções Robustas:** Validação rigorosa de respostas JSON (*case-sensitive*) e Status Codes HTTP.
+Durante o desenvolvimento da API e da suíte de testes, foram implementadas soluções de infraestrutura, arquitetura de software e redes locais para garantir a comunicação fluida e segura entre os componentes:
+
+* **Isolamento de Infraestrutura:** Banco de dados PostgreSQL configurado e executado totalmente isolado dentro de um container Docker (`postgres-moda`).
+* **Segurança de Rotas (Middlewares):** Implementação de um middleware de interceptação de rotas (`auth.js`) encarregado de extrair o cabeçalho `Authorization`, validar a assinatura da chave secreta (`agentemoda-secret`) do token JWT e garantir o controle de acesso à rota privada de produtos.
+* **Leitura de Carga Útil (Payload JSON):** Configuração nativa do middleware `express.json()` no fluxo de entrada da aplicação, permitindo que o Express decodifique perfeitamente os corpos das requisições HTTP (`req.body`) enviados pelo Insomnia e Playwright.
+* **Asserções Automatizadas Robustas:** Validação automática no Playwright simulando fluxos dinâmicos completos (o teste realiza o login em `/sessions`, captura o Token gerado em tempo real, injeta o cabeçalho Bearer no contexto e valida o status de sucesso `201 Created` na rota de `/products`).
 
 ---
 
 ## 🚀 Como Executar o Projeto
 
-### Prerrequisitos
+### Pré-requisitos
 Antes de começar, você vai precisar do [Node.js](https://nodejs.org/), [Git](https://git-scm.com/) e do [Docker](https://www.docker.com/) instalados em sua máquina.
 
 ### 1. Clonar o Repositório
 ```bash
-git clone [https://.github/workflows/playwright.yml](https://github.com/ISAIASUNIC/playwright-api-automation.git)
-cd NOME_DO_REPOSITORIO
+git clone [https://github.com/ISAIASUNIC/playwright-api-automation.git](https://github.com/ISAIASUNIC/playwright-api-automation.git)
+cd playwright-api-automation
