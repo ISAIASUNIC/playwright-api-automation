@@ -43,3 +43,27 @@ test('Deve realizar o login e cadastrar um produto com sucesso no Agente Moda', 
   
   console.log(`✅ Sucesso! Produto "${productBody.name}" cadastrado com ID: ${productBody.id}`);
 });
+
+test('Não deve permitir cadastrar um produto se o token não for informado', async ({ request }) => {
+  console.log('🔒 Testando cenário de segurança (Sem Token)...');
+
+  // Tentando fazer o POST sem passar o objeto "headers" com o Authorization
+  const productResponse = await request.post('http://localhost:3001/products', {
+    data: {
+      name: 'Produto Hacker',
+      price: 999.90,
+      stock: 1
+    }
+  });
+
+  // O Playwright deve esperar um status 401 (Unauthorized) do seu middleware auth.js
+  expect(productResponse.status()).toBe(401);
+
+  const responseBody = await productResponse.json();
+  
+  // Opcional: Validar se a mensagem de erro retornada é a correta
+  expect(responseBody).toHaveProperty('message');
+  
+  console.log('✅ Sucesso! A API barrou a requisição sem token corretamente.');
+});
+
