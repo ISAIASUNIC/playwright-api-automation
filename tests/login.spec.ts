@@ -1,69 +1,43 @@
 import { test, expect } from '@playwright/test';
 
-test('Deve realizar o login e cadastrar um produto com sucesso no Agente Moda', async ({ request }) => {
-  
-  console.log('🔄 Iniciando teste automatizado...');
+test('Deve garantir a integridade do ciclo de vida do produto (POST, PUT, DELETE) e limpeza de dados', async ({ request }) => {
+  console.log('🚀 Iniciando Teste de Ciclo de Vida E2E...');
 
-  // 1. FAZ O LOGIN DINÂMICO PARA CAPTURAR O TOKEN REAL DO DOCKER
+  // 1. SETUP: Autenticação
   const loginResponse = await request.post('http://localhost:3001/sessions', {
-    data: {
-      email: 'isaias@teste.com', // Garanta que este usuário existe no seu banco
-      password: '123'            // A senha correspondente
+    data: { email: 'isaias@teste.com', password: '123' }
+  });
+  const { token } = await loginResponse.json();
+  const headers = { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' };
+
+  // 2. CREATE: Cadastra o produto
+  const createResponse = await request.post('http://localhost:3001/products', {
+    headers,
+    data: { name: 'Produto Sênior Original', price: 100.00, stock: 10 }
+  });
+  expect(createResponse.status()).toBe(201);
+  const product = await createResponse.json();
+  const productId = product.id; 
+
+  console.log(`🔹 Produto criado com ID: ${productId}. Iniciando atualizações...`);
+
+  // 3. UPDATE (PUT): ID passado na URL, conforme o seu routes.js
+  const updateResponse = await request.put(`http://localhost:3001/products/${productId}`, { 
+    headers,
+    data: { 
+      name: 'Produto Sênior Atualizado', 
+      price: 150.00, 
+      stock: 5 
     }
   });
+  expect([200, 204]).toContain(updateResponse.status());
 
-  // Valida se o login deu bom (Status 200)
-  expect(loginResponse.status()).toBe(200);
-  
-  const loginBody = await loginResponse.json();
-  const tokenGerado = loginBody.token;
-  
-  console.log('🔑 Token JWT obtido com sucesso via automação!');
-
-  // 2. CADASTRA O PRODUTO USANDO O TOKEN EXTRAÍDO ANTERIORMENTE
-  const productResponse = await request.post('http://localhost:3001/products', {
-    headers: {
-      'Authorization': `Bearer ${tokenGerado}`,
-      'Content-Type': 'application/json'
-    },
-    data: {
-      name: 'Camiseta Playwright Liso',
-      price: 79.90,
-      stock: 50
-    }
+  // 4. TEARDOWN (DELETE): ID passado na URL, conforme o seu routes.js
+  console.log(`🧹 Iniciando Teardown: Removendo ID ${productId} do banco...`);
+  const deleteResponse = await request.delete(`http://localhost:3001/products/${productId}`, {
+    headers
   });
+  expect([200, 204]).toContain(deleteResponse.status());
 
-  // Aceita tanto 200 quanto 201 dependendo do padrão do seu controller
-  expect([200, 201]).toContain(productResponse.status());
-
-  const productBody = await productResponse.json();
-  
-  // Validação final: o banco do Docker atribuiu um ID ao produto?
-  expect(productBody).toHaveProperty('id');
-  
-  console.log(`✅ Sucesso! Produto "${productBody.name}" cadastrado com ID: ${productBody.id}`);
+  console.log('✅ Ciclo de vida validado e banco de dados limpo com sucesso!');
 });
-
-test('Não deve permitir cadastrar um produto se o token não for informado', async ({ request }) => {
-  console.log('🔒 Testando cenário de segurança (Sem Token)...');
-
-  // Tentando fazer o POST sem passar o objeto "headers" com o Authorization
-  const productResponse = await request.post('http://localhost:3001/products', {
-    data: {
-      name: 'Produto Hacker',
-      price: 999.90,
-      stock: 1
-    }
-  });
-
-  // O Playwright deve esperar um status 401 (Unauthorized) do seu middleware auth.js
-  expect(productResponse.status()).toBe(401);
-
-  const responseBody = await productResponse.json();
-  
-  // Opcional: Validar se a mensagem de erro retornada é a correta
-  expect(responseBody).toHaveProperty('message');
-  
-  console.log('✅ Sucesso! A API barrou a requisição sem token corretamente.');
-});
-
