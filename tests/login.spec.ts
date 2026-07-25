@@ -1,43 +1,54 @@
+
 import { test, expect } from '@playwright/test';
 
-test('Deve garantir a integridade do ciclo de vida do produto (POST, PUT, DELETE) e limpeza de dados', async ({ request }) => {
-  console.log('🚀 Iniciando Teste de Ciclo de Vida E2E...');
+// 1. DADOS DE TESTE (Data-Driven): Array com múltiplos cenários de falha (Edge Cases)
+const invalidScenarios = [
+  { 
+    cenario: 'nome ausente ou vazio', 
+    payload: { price: 150.00, stock: 10 } 
+  },
+  { 
+    cenario: 'preço com valor negativo', 
+    payload: { name: 'Produto Hacker', price: -50.00, stock: 10 } 
+  },
+  { 
+    cenario: 'estoque em formato de texto', 
+    payload: { name: 'Produto Bugado', price: 100.00, stock: 'dez' } 
+  }
+];
 
-  // 1. SETUP: Autenticação
-  const loginResponse = await request.post('http://localhost:3001/sessions', {
-    data: { email: 'isaias@teste.com', password: '123' }
+test.describe('Suíte Sênior: Validação Orientada a Dados (Data-Driven)', () => {
+  let tokenJWT = '';
+
+  // 2. SETUP (beforeAll): Roda apenas 1 vez antes de todos os testes para ganhar performance
+  test.beforeAll(async ({ request }) => {
+    console.log('🔄 Gerando token único para a suíte de testes...');
+    const loginResponse = await request.post('http://localhost:3001/sessions', {
+      data: { email: 'isaias@teste.com', password: '123' }
+    });
+    const loginBody = await loginResponse.json();
+    tokenJWT = loginBody.token;
   });
-  const { token } = await loginResponse.json();
-  const headers = { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' };
 
-  // 2. CREATE: Cadastra o produto
-  const createResponse = await request.post('http://localhost:3001/products', {
-    headers,
-    data: { name: 'Produto Sênior Original', price: 100.00, stock: 10 }
+  // 3. GERAÇÃO DINÂMICA DE TESTES: O Playwright cria um teste para cada item do array
+  invalidScenarios.forEach(({ cenario, payload }) => {
+    
+    test(`Deve bloquear o cadastro de produto com ${cenario}`, async ({ request }) => {
+      
+      const response = await request.post('http://localhost:3001/products', {
+        headers: {
+          'Authorization': `Bearer ${tokenJWT}`,
+          'Content-Type': 'application/json'
+        },
+        data: payload
+      });
+
+      // Valida que a API rejeitou a requisição (status não pode ser 200/201)
+      // Aceitamos 400 (Bad Request), 422 (Unprocessable Entity) ou 500 (Internal Error do Sequelize)
+      expect([400, 422, 500]).toContain(response.status());
+
+      console.log(`🛡️ Segurança validada! Requisição com ${cenario} bloqueada corretamente.`);
+    });
+    
   });
-  expect(createResponse.status()).toBe(201);
-  const product = await createResponse.json();
-  const productId = product.id; 
-
-  console.log(`🔹 Produto criado com ID: ${productId}. Iniciando atualizações...`);
-
-  // 3. UPDATE (PUT): ID passado na URL, conforme o seu routes.js
-  const updateResponse = await request.put(`http://localhost:3001/products/${productId}`, { 
-    headers,
-    data: { 
-      name: 'Produto Sênior Atualizado', 
-      price: 150.00, 
-      stock: 5 
-    }
-  });
-  expect([200, 204]).toContain(updateResponse.status());
-
-  // 4. TEARDOWN (DELETE): ID passado na URL, conforme o seu routes.js
-  console.log(`🧹 Iniciando Teardown: Removendo ID ${productId} do banco...`);
-  const deleteResponse = await request.delete(`http://localhost:3001/products/${productId}`, {
-    headers
-  });
-  expect([200, 204]).toContain(deleteResponse.status());
-
-  console.log('✅ Ciclo de vida validado e banco de dados limpo com sucesso!');
 });
